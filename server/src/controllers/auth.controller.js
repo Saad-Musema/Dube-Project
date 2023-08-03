@@ -1,6 +1,6 @@
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcrypt");
-var User = require("../models/user");
+var User = require('../model/user.mongo');
 
 exports.signup = (req, res) => {
   const user = new User({
