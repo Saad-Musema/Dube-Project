@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose')
 
 const usersRoute = require('./routes/user.routes');
-const MONGO_URL = 'mongodb://localhost:27017'
+const MONGO_URL = 'mongodb+srv://admin:dube@users-list.ysfaxez.mongodb.net/?retryWrites=true&w=majority'
 const app = express();
 
 try {
@@ -22,6 +22,6 @@ app.use(express.urlencoded({
 
 app.use(usersRoute);
 
-app.listen(process.env.PORT || 5000, () => {
+app.listen(process.env.PORT || 3000, () => {
     console.log("Server is live on port 3000");
   })

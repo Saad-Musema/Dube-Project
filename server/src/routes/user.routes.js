@@ -6,9 +6,7 @@ const {
 } = require('../controllers/auth.controller')
 
 
-router.post('register', signup,(req, res) => {
-
-})
+router.post('/register', signup)
 
 
 module.exports = router;
