@@ -2,11 +2,12 @@ const http = require('http');
 const mongoose = require('mongoose')
 
 
-const MONGO_URL = 'mongodb+srv://admin:dube@users-list.ysfaxez.mongodb.net/?retryWrites=true&w=majority'
+const mongo_uri = "mongodb+srv://admin:admin@dube-commerce-cluster.nixlpsb.mongodb.net/?retryWrites=true&w=majority";
+
 
 
 const app = require('./app.js')
-const PORT = 9000;
+const PORT = process.env.PORT || 9000;
 
 const server = http.createServer(app);
 
@@ -20,8 +21,7 @@ mongoose.connection.on('error', (err)=>{
 
 
 async function startServer(){
-    await
-        mongoose.connect(MONGO_URL, {
+    try {await mongoose.connect(mongo_uri, {
           useUnifiedTopology: true,
           useNewUrlParser: true
         });
@@ -29,7 +29,11 @@ async function startServer(){
 
     server.listen(PORT, ()=> {
         console.log(`Server running on port ${PORT}`);
-    })
+    })}
+
+    catch(error) {
+        console.error(error);
+    }
 }
 
 startServer();
