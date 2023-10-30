@@ -20,12 +20,6 @@ async function signup(req, res){
 }
 
 
-// async function getUserData(req, res){
-//   return await User.find({} , {
-//     '_id' : 0, '__v': 0
-// }); 
-// }
-
 async function signin(req, res){
   return await res.status(200).json(await getUserData());
 }
