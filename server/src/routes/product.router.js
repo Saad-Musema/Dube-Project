@@ -43,7 +43,7 @@ productRouter.get('/:type', async (req, res)=>{
     const type = req.params.type;
     const typeId = await catagories.findOne({name: type});
     try{
-        res.status(201).send(await products.find({catagory: typeId}))
+        res.status(200).send(await products.find({catagory: typeId}))
     }
     catch(error){
         console.log(error);
