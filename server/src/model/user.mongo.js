@@ -1,35 +1,42 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
+const bcrypt = require('bcrypt');
 
 const usersSchema = new mongoose.Schema({
     name: {type: String,
             required: true},
-    email: {type: String,
-        unique: [true, "email already exists in database!"],
-        lowercase: true,
-        trim: true,
-        required: [true, "email not provided"],
+    email: {type: String,required: true,
         validate: {
-          validator: function (v) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-          },
-          message: '{VALUE} is not a valid email!'},
-
-    password: {type: String,
-        required: true,
-        min: 8},
-
-    phoneNumber: {type: Number,
-        required: true},
-
-    Address: {
-        type: String,
-        required: true
+            validator: (value) => validator.isEmail(value),
+            message: 'Email is invalid'
+        }
     },
-    created: {
-        type: Date,
-        default: Date.now
-      }
-}})
+    phoneNumber: {type: String,required: true},
+    address : {type: String,required: true},
+    subcity: {type: String,required: true},
+    city: {type: String,required: true},
+    password: {type : String, required: true},
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
+});
 
+usersSchema.methods.generateAuthToken = async function () {
+    const user = this
+    const token = jwt.sign({ _id: user._id.toString()}, process.env.JWT_SECRET)
+    user.tokens = user.tokens.concat({token})
+    await user.save()
+    return token
+}
+
+usersSchema.pre('save', async function(next) {const user = this
+    if (user.isModified('password')) {
+    user.password = await bcrypt.hash(user.password, 8)
+ }
+   next()
+ })
 
 module.exports = mongoose.model('user', usersSchema)

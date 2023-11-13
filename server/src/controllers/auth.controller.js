@@ -1,33 +1,51 @@
+require('dotenv').config();
+
 var jwt = require("jsonwebtoken");
-var bcrypt = require("bcrypt");
-var User = require('../model/user.mongo');
 
-exports.signup = (req, res) => {
+
+const User = require('../model/user.mongo');
+
+async function signup(req, res){
+  const userData = req.body;
+
   const user = new User({
-    name: req.body.name,
-    email: req.body.email,
-    password: bcrypt.hashSync(req.body.password, 8),
-    phoneNumber: req.body.phoneNumber,
-    address: req.body.address,
-  });
+    name: userData.name,
+    email: userData.email,
+    phoneNumber: userData.phoneNumber,
+    address: userData.address,
+    subcity: userData.subcity,
+    city: userData.city,
+    password: userData.password,
+  })
 
-
-  user.save((err, user) => {
-    if (err) {
-      res.status(500)
-        .send({
-          message: `User could not be registered ${err}`
-        });
-      return;
-    } else {
-      res.status(200)
-        .send({
-          message: "User Registered successfully"
-        })
-    }
-  });
-
-exports.signin = (req, res) => {
-
+  return res.status(201).json(user);
 }
-};
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token === null || token === undefined) {
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, user) => {
+    if (err) {
+      console.log(err);
+      return res.status(403).send("Not Authorized");
+    }
+
+    req.user = user;
+    next();
+  });
+}
+
+
+async function signin(req, res){
+  return await res.status(200).json(await getUserData());
+}
+
+
+
+
+module.exports = {signup, signin, authenticateToken};

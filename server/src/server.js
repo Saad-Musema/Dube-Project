@@ -1,16 +1,39 @@
 const http = require('http');
+const mongoose = require('mongoose')
+
+
+const mongo_uri = "mongodb+srv://admin:admin@dube-commerce-cluster.nixlpsb.mongodb.net/?retryWrites=true&w=majority";
+
 
 
 const app = require('./app.js')
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9000;
 
 const server = http.createServer(app);
 
+mongoose.connection.once('open', ()=> {
+    console.log('MongoDB connection is ready!')
+})
 
-function startServer(){
+mongoose.connection.on('error', (err)=>{
+    console.error(err);
+})
+
+
+async function startServer(){
+    try {await mongoose.connect(mongo_uri, {
+          useUnifiedTopology: true,
+          useNewUrlParser: true
+        });
+        console.log("Connected to User Database");
+
     server.listen(PORT, ()=> {
-        console.log('Server running');
-    })
+        console.log(`Server running on port ${PORT}`);
+    })}
+
+    catch(error) {
+        console.error(error);
+    }
 }
 
 startServer();
