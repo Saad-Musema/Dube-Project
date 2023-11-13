@@ -15,9 +15,22 @@ const usersSchema = new mongoose.Schema({
     address : {type: String,required: true},
     subcity: {type: String,required: true},
     city: {type: String,required: true},
-    password: {type : String, required: true}
+    password: {type : String, required: true},
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
 });
 
+usersSchema.methods.generateAuthToken = async function () {
+    const user = this
+    const token = jwt.sign({ _id: user._id.toString()}, process.env.JWT_SECRET)
+    user.tokens = user.tokens.concat({token})
+    await user.save()
+    return token
+}
 
 usersSchema.pre('save', async function(next) {const user = this
     if (user.isModified('password')) {
