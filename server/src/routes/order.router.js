@@ -11,14 +11,9 @@ let orderNumberCounter = 1000;
 
 
 ordersRouter.post('/', async (req, res)=>{
-  console.log("here");
-    // const order = new Order(req.body);
     const orderNumber = `ORD${orderNumberCounter}`
-    console.log(orderNumber);
+    req.body.orderNumber = orderNumber;
     orderNumberCounter++;
-    // const user = await users.findOne({email : order.user});
-    console.log(req.body);
-   
     try{
         const order = new Order(req.body);
         await order.save(order);
