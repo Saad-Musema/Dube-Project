@@ -4,13 +4,14 @@ const express = require('express');
 const Order = require('../model/order.mongo');
 const users = require('../model/user.mongo');
 
+const {authenticateToken} = require('../controllers/auth.controller');
 
 const ordersRouter = express.Router();
 
 let orderNumberCounter = 1000;
 
 
-ordersRouter.post('/', async (req, res)=>{
+ordersRouter.post('/', authenticateToken, async (req, res)=>{
     const orderNumber = `ORD${orderNumberCounter}`
     req.body.orderNumber = orderNumber;
     orderNumberCounter++;
