@@ -58,18 +58,24 @@ usersRouter.post('/', async(req, res)=>{
 usersRouter.post('/:login', async(req, res)=>{
     
     try {
+
         const user = await User.findOne({email: req.body.email});
         console.log(user);
         if(!user){
-            return res.send("User with this Email doesn't exist!")
+            return res.send("Password and Email don't match!")
         }
 
         let result = await bcrypt.compare(req.body.password, user.password)
             if(!result){
-                return res.status(403).send("Password not correct!")
+                return res.status(403).send("Password and Email don't match!")
             }
         const userData = {username: user.name}
         const access_token = generateAuthToken(userData);
+        await User.updateOne(
+            { _id: user._id },
+            { $push: { tokens: { token: access_token } } }
+          );
+          console.log(user)
         const refresh_token = jwt.sign(userData, process.env.refresh_token);
         res.json({access_token: access_token, refresh_token: refresh_token});
     } catch (error) {
@@ -82,6 +88,8 @@ usersRouter.post('/:token', async(req, res)=>{
     const refresh_token = req.body.token;
     
 })
+
+
 
 function generateAuthToken(userData){
     return jwt.sign(userData, process.env.ACCESS_TOKEN, { expiresIn: '10m' });
