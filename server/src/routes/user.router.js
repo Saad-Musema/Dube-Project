@@ -46,6 +46,8 @@ usersRouter.post('/', async(req, res)=>{
     }
 
     try {
+        const refresh_token = jwt.sign(userData, process.env.refresh_token);
+        user.refreshToken = refresh_token;
         await user.save(user);
         res.status(201).send(user);
     } catch (error) {
@@ -69,15 +71,15 @@ usersRouter.post('/:login', async(req, res)=>{
             if(!result){
                 return res.status(403).send("Password and Email don't match!")
             }
-        const userData = {username: user.name}
+        const userData = {username: user._id}
         const access_token = generateAuthToken(userData);
         await User.updateOne(
             { _id: user._id },
             { $push: { tokens: { token: access_token } } }
           );
           console.log(user)
-        const refresh_token = jwt.sign(userData, process.env.refresh_token);
-        res.json({access_token: access_token, refresh_token: refresh_token});
+        
+        res.json({access_token: access_token});
     } catch (error) {
         console.log(error);
        return  res.status(500).send('User not Found!');
@@ -88,6 +90,14 @@ usersRouter.post('/:token', async(req, res)=>{
     const refresh_token = req.body.token;
     
 })
+
+//Flag user request for admins to flag given users for abnoraml behaviours
+
+//User data update
+
+//Change password
+
+
 
 
 
