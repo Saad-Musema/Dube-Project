@@ -25,6 +25,8 @@ async function signup(req, res){
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+
+  const refreshToken = authHeader && authHeader
   
   if (token === null || token === undefined) {
     return res.sendStatus(401);

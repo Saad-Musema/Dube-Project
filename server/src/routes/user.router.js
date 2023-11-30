@@ -102,7 +102,7 @@ usersRouter.post('/:token', async(req, res)=>{
 
 
 function generateAuthToken(userData){
-    return jwt.sign(userData, process.env.ACCESS_TOKEN, { expiresIn: '10m' });
+    return jwt.sign(userData, process.env.ACCESS_TOKEN, { expiresIn: '1 hr' });
 }
 
 
