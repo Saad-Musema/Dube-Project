@@ -25,23 +25,32 @@ async function signup(req, res){
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+
+  const refreshToken = authHeader && authHeader
   
   if (token === null || token === undefined) {
     return res.sendStatus(401);
   }
 
   jwt.verify(token, process.env.ACCESS_TOKEN, (err, user) => {
-    if (err) {
-      console.log(err);
-      return res.status(403).send("Not Authorized");
+    if(err){
+      if (err.name == 'TokenExpiredError') {
+        console.log(err.name);
+        
+        
+        return res.status(403).send("Token Expired");
+      }
     }
 
     req.user = user;
+    console.log(user);
     next();
   });
-
-  
 }
+
+// function getUserId(req, res, next){
+
+// }
 
 
 
