@@ -40,18 +40,6 @@ const orderSchema = new mongoose.Schema({
       },
     },
   ],
-  paymentMethod: String,
-  paymentStatus: {
-    type: String,
-    enum: ['paid', 'pending'],
-    default: 'pending',
-  },
-  totalAmount: {
-    type: Number,
-    required: true,
-  },
-  shippingFee: Number,
-  orderNotes: String,
 });
 
 const Order = mongoose.model('Order', orderSchema);
