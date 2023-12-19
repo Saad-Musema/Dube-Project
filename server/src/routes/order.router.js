@@ -14,42 +14,60 @@ const processPayment = require('../controllers/payment.controller');
 
 const ordersRouter = express.Router();
 
-let orderNumberCounter = 1000;
 
 
 
-ordersRouter.post('/', async (req, res)=>{
-    const session = await mongoose.startSession();
-    session.startTransaction();
+ordersRouter.post('/', async (req, res) => {
+    let session;
 
-    // getNextOrderNumber
-    const orderNumber = await getNextOrderNumber(session);
-    console.log(orderNumber);
+    session = await mongoose.startSession();
 
-    req.body.orderNumber = `ORD${orderNumber}`;
-    // orderNumberCounter++;
-    console.log(req.body.items[0]);
-    try{
-        const order = new Order(req.body);
-        await order.save(order, { session });
-        console.log(order);
-        const paymentResponse = processPayment(req.body, order);
+    try {
+        console.log("here")
+        session.startTransaction();
+        console.log("GOt here")
 
-        console.log(paymentResponse);
-        req.t
+
+        const transactionOptions = {
+            readPreference: 'primary',
+            readConcern: { level: 'local' },
+            writeConcern: { w: 'majority' }
+        };
+
+        // getNextOrderNumber
+        
+
+        await session.withTransaction(async (err) => {
+            if(err){
+                throw(error);
+            }
+            console.log("GOt here")
+            const orderNumber = await getNextOrderNumber(session);
+            console.log(orderNumber);
+
+            req.body.orderNumber = `ORD${orderNumber}`;
+            req.body.orderDate = Date.now();
+            const order = new Order(req.body);
+            await order.save({ session });
+
+            // const paymentResponse = await processPayment(req.body, order, session);
+        });
+
         await session.commitTransaction();
-        session.endSession();
-        // await order.save(order);
         res.status(201).send(order);
-    }
-    catch(error){
-        await session.abortTransaction();
-        session.endSession();
 
-        console.log(error.message);
-        res.status(500).send("Error while adding product")
+    } catch (error) {
+
+        await session.abortTransaction();
+        console.error('Transaction aborted:', error);
+        res.status(500).send("Error while adding product");
+
+    }finally{
+
+        session.endSession();
     }
 });
+
 
 
 ordersRouter.get('/all', async(req, res)=>{
@@ -102,30 +120,32 @@ ordersRouter.get('/:orderNumber', async(req, res)=>{
 
 //Update(use patch) orders request for admins to update the status of a given order
 
-ordersRouter.patch('/:orderNumber', async(req, res)=>{
-    try{
-        const status = req.body.status;
-        console.log(status);
-        const orderNumber = req.params.orderNumber;
+ordersRouter.patch('/:orderNumber', async (req, res) => {
+    try {
+        const { orderNumber } = req.params;
+        const { status } = req.body;
+
         console.log(orderNumber);
+
+
         const updateOrder = await Order.findOneAndUpdate(
             { orderNumber: orderNumber },
-            { $set: { status: status } });
+            { $set: { status: status } },
+            { new: true } // Return the updated document
+        );
 
         if (!updateOrder) {
             return res.status(404).send("Order not found");
-          }
-          console.log(updateOrder);
-        // order.status = status;
+        }
+
         console.log(updateOrder);
-        // await order.save();
         res.status(200).json(updateOrder);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error updating order status");
     }
-    catch(err){
-        console.log(err);
-        res.status(500).send("Error finding order!");
-    }
-})
+});
+
 
 
 

@@ -28,7 +28,7 @@ const paymentSchema = new mongoose.Schema({
     plan : {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'plan',
-        // required: true,
+        required: true,
     },
 
     status : {
@@ -45,7 +45,8 @@ const paymentSchema = new mongoose.Schema({
             },
 
             dueDate: {
-                type: Date
+                type: Date,
+                required: true
             },
 
             amount: {
