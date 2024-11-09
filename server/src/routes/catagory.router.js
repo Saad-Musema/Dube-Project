@@ -11,6 +11,7 @@ catagoryRouter.post('/', async(req, res)=>{
     const catagory = new Catagory(req.body);
     try{
         await catagory.save(catagory);
+        console.log("Here!")
         console.log(catagory);
         res.status(200).send(catagory);
     }
