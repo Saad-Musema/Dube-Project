@@ -36,3 +36,10 @@ jobs:
     - name: Build
       run: npm run start 
       working-directory: ./server
+      env:
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+
+    # # Run tests 
+    # - name: Run tests
+    #   run: npm test
+    #   working-directory: ./server
