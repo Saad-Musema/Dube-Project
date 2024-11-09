@@ -27,6 +27,11 @@ jobs:
       run: npm install
       working-directory: ./server
 
+    - name: Install gulp
+      run: npm install gulp
+      working-directory: ./server
+      
+
     - name: Build
       run: |
         npm install
