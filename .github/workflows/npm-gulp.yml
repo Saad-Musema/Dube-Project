@@ -31,13 +31,16 @@ jobs:
     - name: Force Fix Vulnerabilities
       run: npm audit fix --force || true
       working-directory: ./server
-
+      
+    - name: Show secrets
+      run: echo ${{ secrets.MONGO_URL }}
+      
     # Build or test commands (if any)
-    - name: Build
-      run: npm run start 
-      working-directory: ./server
-      env:
-          MONGO_URL: ${{ secrets.MONGO_URL }}
+    # - name: Build
+    #   run: npm run start 
+    #   working-directory: ./server
+    #   env:
+    #       MONGO_URL: ${{ secrets.MONGO_URL }}
 
     # # Run tests 
     # - name: Run tests
