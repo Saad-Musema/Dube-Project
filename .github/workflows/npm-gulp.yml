@@ -27,9 +27,8 @@ jobs:
       run: npm install
       working-directory: ./server
 
-    # Attempt to fix vulnerabilities but continue even if some issues remain
-    - name: Fix Vulnerabilities
-      run: npm audit fix || true
+    - name: Force Fix Vulnerabilities
+      run: npm audit fix --force || true
       working-directory: ./server
 
     # Ensure Gulp is installed
