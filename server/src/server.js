@@ -2,7 +2,7 @@ const http = require('http');
 const mongoose = require('mongoose')
 
 
-const mongo_uri = "mongodb+srv://admin:admin@dube-commerce-cluster.nixlpsb.mongodb.net/?retryWrites=true&w=majority";
+const mongo_uri = process.env.MONGO_URL
 
 
 
