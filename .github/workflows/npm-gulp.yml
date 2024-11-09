@@ -26,6 +26,10 @@ jobs:
     - name: Install dependencies
       run: npm install
       working-directory: ./server
+      
+    - name: Fix Vulnurebilities 
+      run: npm audit fix
+      working-directory: ./server
 
     - name: Install gulp
       run: npm install gulp
