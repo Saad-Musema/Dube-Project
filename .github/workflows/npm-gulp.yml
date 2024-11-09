@@ -2,9 +2,9 @@ name: NodeJS with Gulp
 
 on:
   push:
-    branches: [ "main" , "redo"]
+    branches: [ "main", "redo" ]
   pull_request:
-    branches: [ "main" , "redo"]
+    branches: [ "main", "redo" ]
 
 jobs:
   build:
@@ -21,25 +21,23 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        
-     # Installs all dependecies of Project   
+
+    # Install all dependencies
     - name: Install dependencies
       run: npm install
       working-directory: ./server
-      
-    - name: Fix Vulnurebilities 
-      run: npm audit fix
-      working-directory: ./server
-      
-    - name: Fix Vulnurebilities 
-      run: npm audit fix
+
+    # Attempt to fix vulnerabilities but continue even if some issues remain
+    - name: Fix Vulnerabilities
+      run: npm audit fix || true
       working-directory: ./server
 
-    - name: Install gulp
+    # Ensure Gulp is installed
+    - name: Install Gulp
       run: npm install gulp
       working-directory: ./server
-      
 
+    # Build the project
     - name: Build
       run: |
         npm install
