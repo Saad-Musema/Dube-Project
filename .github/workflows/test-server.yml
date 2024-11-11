@@ -36,6 +36,6 @@ jobs:
       
     # Run ESLint with the specified configuration file
     - name: Run ESLint
-      run: npx eslint -c ./server/eslint.config.mjs
+      run: npx eslint -c ./eslint.config.mjs
       working-directory: ./server
 
