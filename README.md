@@ -16,6 +16,7 @@ Authentication: JWT (JSON Web Tokens)
 Payment Processing: To be integrated
 Testing: Jest, Supertest
 Status
-This project is currently under development and is not yet complete. Many features are still being implemented and tested. Contributions and feedback are welcome as we work towards building a robust and user-friendly e-commerce platform for Ethiopia.
+This project is currently under development and is not yet complete. Many features are still being implemented and tested. Contributions and feedback are welcome as we work towards building a robust and user-friendly e-commerce platform for the Ethiopian Market.
+
 
 getUserData
