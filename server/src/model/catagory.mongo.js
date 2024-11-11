@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const product = require('./product.mongo');
+// const product = require('./product.mongo');
 
 const catagorySchema = new mongoose.Schema({
     name : {type: String},
@@ -10,6 +10,6 @@ const catagorySchema = new mongoose.Schema({
     ]
 })
 
-const catagory = mongoose.model('catagory', catagorySchema)
+// const catagory = mongoose.model('catagory', catagorySchema)
 
 module.exports = mongoose.model('catagory', catagorySchema);

@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const process = require('process')
+
 var jwt = require("jsonwebtoken");
 
 
@@ -27,6 +29,8 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   const refreshToken = authHeader && authHeader
+
+  console.log(refreshToken)
   
   if (token === null || token === undefined) {
     return res.sendStatus(401);
@@ -55,11 +59,11 @@ function authenticateToken(req, res, next) {
 
 
 
-async function signin(req, res){
-  return await res.status(200).json(await getUserData());
-}
+// async function signin(req, res){
+//   return await res.status(200).json(await getUserData());
+// }
 
 
 
 
-module.exports = {signup, signin, authenticateToken};
+module.exports = {signup, authenticateToken};

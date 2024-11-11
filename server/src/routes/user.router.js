@@ -3,8 +3,9 @@ require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
 const libphonenumber = require('libphonenumber-js');
-const path = require('path');
+// const path = require('path');
 const jwt = require('jsonwebtoken');
+const process =  require('process')
 
 
 //From the models directory
@@ -15,10 +16,10 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$
 
 const usersRouter = express.Router();
 
-const {
-    signup,
-    signin
-} = require('../controllers/auth.controller')
+// const {
+//     signup,
+//     signin
+// } = require('../controllers/auth.controller')
 
 
 usersRouter.post('/', async(req, res)=>{
@@ -39,6 +40,8 @@ usersRouter.post('/', async(req, res)=>{
         return passwordRegex.test(password);
 }
 
+
+    const userData = user
 
     if (!isPasswordValid(user.password)) {
     console.log("Password is valid");
@@ -86,10 +89,10 @@ usersRouter.post('/:login', async(req, res)=>{
     }
 });
 
-usersRouter.post('/:token', async(req, res)=>{
-    const refresh_token = req.body.token;
+// usersRouter.post('/:token', async(req, res)=>{
+//     const refresh_token = req.body.token;
     
-})
+// })
 
 //Flag user request for admins to flag given users for abnoraml behaviours
 

@@ -1,11 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const axios = require('axios');
 
 const Order = require('../model/order.mongo');
-const users = require('../model/user.mongo');
+// const users = require('../model/user.mongo');
 
-const paymnet = require('../model/payments.mongo');
+// const paymnet = require('../model/payments.mongo');
 
 const getNextOrderNumber = require('../controllers/counter.controller')
 const {authenticateToken} = require('../controllers/auth.controller');
@@ -14,7 +13,6 @@ const processPayment = require('../controllers/payment.controller');
 
 const ordersRouter = express.Router();
 
-let orderNumberCounter = 1000;
 
 
 
