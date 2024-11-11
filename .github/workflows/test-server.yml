@@ -33,8 +33,13 @@ jobs:
       
     - name: Show secrets
       run: echo ${{ secrets.MONGO_URL }}
-
+      
     # Run ESLint with the specified configuration file
     - name: Run ESLint
-      run: npx eslint
+      run: npx eslint . --ext .js,.jsx,.ts,.tsx -c ./server/eslint.config.js
       working-directory: ./server
+
+    # # Run ESLint with the specified configuration file
+    # - name: Run ESLint
+    #   run: npx eslint
+    #   working-directory: ./server
