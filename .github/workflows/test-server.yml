@@ -36,10 +36,6 @@ jobs:
       
     # Run ESLint with the specified configuration file
     - name: Run ESLint
-      run: npx eslint . --ext .js,.jsx,.ts,.tsx -c ./server/eslint.config.js
+      run: npx eslint -c ./server/eslint.config.js
       working-directory: ./server
 
-    # # Run ESLint with the specified configuration file
-    # - name: Run ESLint
-    #   run: npx eslint
-    #   working-directory: ./server
