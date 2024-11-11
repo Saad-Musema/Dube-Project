@@ -12,8 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-
+        node-version: [20.x]
 
     steps:
     - uses: actions/checkout@v4
@@ -34,15 +33,8 @@ jobs:
       
     - name: Show secrets
       run: echo ${{ secrets.MONGO_URL }}
-      
-    # Build or test commands (if any)
-    - name: Build
-      run: npm run start 
-      working-directory: ./server
-      env:
-          MONGO_URL: ${{ secrets.MONGO_URL }}
 
-    # # Run tests 
-    # - name: Run tests
-    #   run: npm test
-    #   working-directory: ./server
+    # Run ESLint with the specified configuration file
+    - name: Run ESLint
+      run: npx eslint
+      working-directory: ./server
