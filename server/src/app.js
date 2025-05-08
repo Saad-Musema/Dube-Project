@@ -1,7 +1,8 @@
 const express = require('express');
 const helmet = require('helmet');
+const cors = require('cors');
 
-
+const authRouter = require('./routes/auth.router');
 const usersRouter = require('./routes/user.router');
 const productRouter = require('./routes/product.router');
 const catagoryRouter = require('./routes/catagory.router');
@@ -11,18 +12,14 @@ const paymentRouter = require('./routes/payments.router');
 const app = express();
 
 app.use(helmet());
-// const user = require('./model/user.mongo')
-
-
-
+app.use(cors());
 app.use(express.json());
+
+app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/products', productRouter);
-app.use('/catagory', catagoryRouter);
+app.use('/category', catagoryRouter);
 app.use('/orders', ordersRouter);
-app.use('/paymnets', paymentRouter)
-
+app.use('/payments', paymentRouter);
 
 module.exports = app;
-
-

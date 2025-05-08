@@ -1,40 +1,31 @@
-const http = require('http');
-const mongoose = require('mongoose')
-const process = require('process')
+require('dotenv').config();
+const process = require('process');
+const mongoose = require('mongoose');
+const app = require('./app'); // <-- use the proper app
 
+mongoose.connection.once('open', () => {
+  console.log('MongoDB connection is ready!');
+});
 
-const mongo_uri = process.env.MONGO_URL
+mongoose.connection.on('error', (err) => {
+  console.error(err);
+});
 
+async function startServer() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useUnifiedTopology: true,
+      useNewUrlParser: true
+    });
+    console.log("Connected to User Database");
 
-
-const app = require('./app.js')
-const PORT = process.env.PORT || 9000;
-
-const server = http.createServer(app);
-
-mongoose.connection.once('open', ()=> {
-    console.log('MongoDB connection is ready!')
-})
-
-mongoose.connection.on('error', (err)=>{
-    console.error(err);
-})
-
-
-async function startServer(){
-    try {await mongoose.connect(mongo_uri, {
-          useUnifiedTopology: true,
-          useNewUrlParser: true
-        });
-        console.log("Connected to User Database");
-
-    server.listen(PORT, ()=> {
-        console.log(`Server running on port ${PORT}`);
-    })}
-
-    catch(error) {
-        console.error(error);
-    }
+    const PORT = process.env.PORT || 9000;
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 startServer();

@@ -1,112 +1,101 @@
 require('dotenv').config();
-
+const process = require('process');
 const express = require('express');
 const bcrypt = require('bcrypt');
-const libphonenumber = require('libphonenumber-js');
-// const path = require('path');
 const jwt = require('jsonwebtoken');
-const process =  require('process')
+const { parsePhoneNumberFromString } = require('libphonenumber-js');
 
-
-//From the models directory
 const User = require('../model/user.mongo');
-
-//local Variables
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const usersRouter = express.Router();
 
-// const {
-//     signup,
-//     signin
-// } = require('../controllers/auth.controller')
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
+// REGISTER USER
+usersRouter.post('/', async (req, res) => {
+  try {
+    const { email, password, phoneNumber, ...rest } = req.body;
 
-usersRouter.post('/', async(req, res)=>{
-    const user = new User(req.body);
-    if( await User.findOne({email: user.email})){
-        return res.status(409).send("User with this Email already exists");
+    // Check for existing user
+    if (await User.findOne({ email })) {
+      return res.status(409).json({ error: "User with this email already exists." });
     }
 
-    user.phoneNumber = libphonenumber.parsePhoneNumber(user.phoneNumber, 'ET').number;
-    if(!libphonenumber.isValidPhoneNumber(user.phoneNumber)){
-
-        console.log("Not Valid Phone Number");
-        return res.status(409).send("Invalid Phone Number");
+    // Validate phone number
+    const parsedPhone = parsePhoneNumberFromString(phoneNumber, 'ET');
+    if (!parsedPhone || !parsedPhone.isValid()) {
+      return res.status(400).json({ error: "Invalid phone number." });
     }
 
-
-    function isPasswordValid(password) {
-        return passwordRegex.test(password);
-}
-
-
-    const userData = user
-
-    if (!isPasswordValid(user.password)) {
-    console.log("Password is valid");
-    return res.status(409).send("Password is Invalid! Please Include special charater, lowercase, uppercase and number")
+    // Validate password
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ error: "Password must include lowercase, uppercase, number, and special character." });
     }
 
-    try {
-        const refresh_token = jwt.sign(userData, process.env.refresh_token);
-        user.refreshToken = refresh_token;
-        await user.save(user);
-        res.status(201).send(user);
-    } catch (error) {
-        console.log(error.message);
-        res.status(400).send(error.message);
-    }
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate refresh token
+    const userPayload = { email }; // Don't store password or PII here
+    const refreshToken = jwt.sign(userPayload, process.env.REFRESH_TOKEN_SECRET);
+
+    // Create user
+    const user = new User({
+      email,
+      password: hashedPassword,
+      phoneNumber: parsedPhone.number,
+      refreshToken,
+      ...rest
+    });
+
+    await user.save();
+    res.status(201).json({ message: "User created successfully." });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
 });
 
+// LOGIN USER
+usersRouter.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-usersRouter.post('/:login', async(req, res)=>{
-    
-    try {
-
-        const user = await User.findOne({email: req.body.email});
-        console.log(user);
-        if(!user){
-            return res.send("Password and Email don't match!")
-        }
-
-        let result = await bcrypt.compare(req.body.password, user.password)
-            if(!result){
-                return res.status(403).send("Password and Email don't match!")
-            }
-        const userData = {username: user._id}
-        const access_token = generateAuthToken(userData);
-        await User.updateOne(
-            { _id: user._id },
-            { $push: { tokens: { token: access_token } } }
-          );
-          console.log(user)
-        
-        res.json({access_token: access_token});
-    } catch (error) {
-        console.log(error);
-       return  res.status(500).send('User not Found!');
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(403).json({ error: "Email incorrect." });
     }
+
+    // Compare password
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(403).json({ error: "password incorrect." });
+    }
+
+    // Generate access token
+    const userPayload = { id: user._id, email: user.email };
+    const accessToken = generateAuthToken(userPayload);
+
+    // Store token (if using token list logic)
+    await User.updateOne(
+      { _id: user._id },
+      { $push: { tokens: { token: accessToken } } }
+    );
+
+    res.status(200).json({
+      access_token: accessToken,
+      refresh_token: user.refreshToken
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
 });
 
-// usersRouter.post('/:token', async(req, res)=>{
-//     const refresh_token = req.body.token;
-    
-// })
-
-//Flag user request for admins to flag given users for abnoraml behaviours
-
-//User data update
-
-//Change password
-
-
-
-
-
-function generateAuthToken(userData){
-    return jwt.sign(userData, process.env.ACCESS_TOKEN, { expiresIn: '1 hr' });
+// Generate access token
+function generateAuthToken(payload) {
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 }
-
 
 module.exports = usersRouter;

@@ -2,157 +2,114 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const Order = require('../model/order.mongo');
-// const users = require('../model/user.mongo');
-
-// const paymnet = require('../model/payments.mongo');
-
-const getNextOrderNumber = require('../controllers/counter.controller')
-const {authenticateToken} = require('../controllers/auth.controller');
-
+const getNextOrderNumber = require('../controllers/counter.controller');
+const { authenticateToken } = require('../controllers/auth.controller');
 const processPayment = require('../controllers/payment.controller');
 
 const ordersRouter = express.Router();
 
+// Create new order
+ordersRouter.post('/', async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-
-
-ordersRouter.post('/', async (req, res)=>{
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    // getNextOrderNumber
+  try {
     const orderNumber = await getNextOrderNumber(session);
-    console.log(orderNumber);
-
     req.body.orderNumber = `ORD${orderNumber}`;
-    // orderNumberCounter++;
-    console.log(req.body.items[0]);
-    try{
-        const order = new Order(req.body);
-        await order.save(order, { session });
-        console.log(order);
-        const paymentResponse = processPayment(req.body, order);
 
-        console.log(paymentResponse);
-        req.t
-        await session.commitTransaction();
-        session.endSession();
-        // await order.save(order);
-        res.status(201).send(order);
-    }
-    catch(error){
-        await session.abortTransaction();
-        session.endSession();
+    const order = new Order(req.body);
+    await order.save({ session });
 
-        console.log(error.message);
-        res.status(500).send("Error while adding product")
-    }
+    const paymentResponse = await processPayment(req.body, order); // Make sure this is awaited
+    console.log("Payment response:", paymentResponse);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json(order);
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error creating order:", error);
+    res.status(500).json({ error: "Failed to create order" });
+  }
 });
 
-
-ordersRouter.get('/all', async(req, res)=>{
-    try{const orders = await Order.find();
-        res.status(200).json(orders);
-    }
-    catch(err){
-        console.log(err);
-        res.status(500).send("Server Error")
-    }
-  
+// Get all orders (admin)
+ordersRouter.get('/', async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).send("Server Error");
+  }
 });
 
-//Orders get request for a user to get his own orders
+// Get user's own orders
+ordersRouter.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user.id });
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error("Error fetching user orders:", err);
+    res.status(500).json({ error: "Failed to fetch user orders" });
+  }
+});
 
-ordersRouter.get('/user', authenticateToken, async(req, res)=>{
-    try{
-        const orders = await Order.find({user: req.user})
-        res.status(400).json(orders);
+// Get specific order by orderNumber
+ordersRouter.get('/:orderNumber', async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
     }
-    catch(err){
-        console.log(err);
+    res.status(200).json(order);
+  } catch (err) {
+    console.error("Error finding order:", err);
+    res.status(500).json({ error: "Failed to find order" });
+  }
+});
+
+// Update order status (admin only)
+ordersRouter.patch('/:orderNumber', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { orderNumber } = req.params;
+
+    const updatedOrder = await Order.findOneAndUpdate(
+      { orderNumber },
+      { $set: { status } },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ error: "Order not found" });
     }
 
-})
+    res.status(200).json(updatedOrder);
+  } catch (err) {
+    console.error("Error updating order:", err);
+    res.status(500).json({ error: "Failed to update order" });
+  }
+});
 
-
-//GraphQL API to get some part of the product detail for the product catalog page
-
-
-
-//To get specific order
-
-ordersRouter.get('/:orderNumber', async(req, res)=>{
-    try{
-        const order = await Order.findOne({orderNumber: req.params.orderNumber});
-        res.status(201).json(order);
-    }
-    catch(err){
-        console.log(err);
-        res.status(500).send("Error finding order!")
-    }
-})
-
-//Get order history of users
-
-
-
-//Apply discount codes
-
-//Update(use patch) orders request for admins to update the status of a given order
-
-ordersRouter.patch('/:orderNumber', async(req, res)=>{
-    try{
-        const status = req.body.status;
-        console.log(status);
-        const orderNumber = req.params.orderNumber;
-        console.log(orderNumber);
-        const updateOrder = await Order.findOneAndUpdate(
-            { orderNumber: orderNumber },
-            { $set: { status: status } });
-
-        if (!updateOrder) {
-            return res.status(404).send("Order not found");
-          }
-          console.log(updateOrder);
-        // order.status = status;
-        console.log(updateOrder);
-        // await order.save();
-        res.status(200).json(updateOrder);
-    }
-    catch(err){
-        console.log(err);
-        res.status(500).send("Error finding order!");
-    }
-})
-
-
-
-
-//Update(use put method) orders request for users to change their requests with some time limit as to when
-
-
-
-
-//Delete orders request from user
-
+// Delete order (user)
 ordersRouter.delete('/:orderNumber', async (req, res) => {
-    try {
-      const orderNumber = req.params.orderNumber;
-  
-      const order = await Order.findOneAndDelete({ orderNumber: orderNumber });
-  
-      if (!order) {
-        return res.status(404).send("Order not found");
-      }
-  
-      console.log(order);
-      res.status(200).send("Order deleted");
-    } catch (err) {
-      console.log(err);
-      res.status(500).send("Error deleting order");
+  try {
+    const { orderNumber } = req.params;
+
+    const order = await Order.findOneAndDelete({ orderNumber });
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
     }
-  });
-  
+
+    res.status(200).send("Order deleted");
+  } catch (err) {
+    console.error("Error deleting order:", err);
+    res.status(500).send("Error deleting order");
+  }
+});
 
 module.exports = ordersRouter;
-

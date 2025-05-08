@@ -1,81 +1,89 @@
 const express = require('express');
-
-
-const products = require('../model/product.mongo');
-const catagories = require('../model/catagory.mongo');
-
-const {authenticateToken} = require('../controllers/auth.controller');
-
-
+const Product = require('../model/product.mongo');
+const Category = require('../model/catagory.mongo');
 const productRouter = express.Router();
 
+// GET /products?featured=true&page=1&limit=10
+productRouter.get('/', async (req, res) => {
+  try {
+    const { featured, page = 1, limit = 10 } = req.query;
+    const query = featured === 'true' ? { isFeatured: true } : {};
 
-productRouter.post('/', async (req, res)=>{
-    const product = new products(req.body);
-    const type = product.type;
-    if(await products.findOne({PSN: product.PSN})){
-        return res.status(500).send("Product with this PSN already exists!");
-    }
-    const catagory = await catagories.findOne({name : type});
-    if(!catagory){
-        console.log("Catagory Not Found!");
-        res.status(500).send("Catagory not found!");
-    }
-    product.catagory = catagory._id;
+    const products = await Product.find(query)
+      .populate('category', 'name') // only get category name
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
 
-    try{
-        await product.save(product);
-        res.status(201).send("Product has been added!")
-    }
-    catch(error) {
-        console.log(error);
-        res.status(400).send("Error while adding product!");
-    }
-})
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
 
-productRouter.get('/', authenticateToken ,async (req, res)=>{
-    try{
-        (req, res);
-        const product = await products.find({});
-        console.log(product);
-        return res.status(200).json(product);
-    }
-    catch(error){
-        console.log(error);
-        res.status(500).json({error: "Server Error"});
-    }
-})
+// GET products by category
+productRouter.get('/category/:categoryId', async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
 
-productRouter.get('/:type', async (req, res)=>{
-    const type = req.params.type;
-    const typeId = await catagories.findOne({name: type});
-    if(!typeId){
-        return res.status(404).send("Catagory not found!");
-    }
-    try{
-        res.status(200).send(await products.find({catagory: typeId}))
-    }
-    catch(error){
-        console.log(error);
-        res.status(500).send("Error with type");
-    }
-})
+    const products = await Product.find({ category: req.params.categoryId })
+      .populate('category', 'name')
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
 
-productRouter.get('/:type/:psn', async (req, res)=>{
-    const productId = req.params.psn;
-    const product = await products.findOne({PSN: productId});
-    if(!product){
-        return res.status(404).send("Product Doesn't Exist!");
-    }
-    try{
-        res.status(200).send(product);
-    }
-    catch(error) {
-        console.log(error);
-        res.status(500).send("Product Not Found!")
-    }
-})
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching products by category:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
 
+// GET product by ID
+productRouter.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('category', 'name')
+      .lean();
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
+// POST create product
+productRouter.post('/', async (req, res) => {
+  try {
+    const { type, ...rest } = req.body;
+
+    if (!type) {
+      return res.status(400).json({ error: 'Product type (category name) is required.' });
+    }
+
+    const category = await Category.findOne({ name: type });
+    if (!category) {
+      return res.status(400).json({ error: 'Category not found!' });
+    }
+
+    const newProduct = new Product({
+      ...rest,
+      category: category._id
+    });
+
+    const savedProduct = await newProduct.save();
+    res.status(201).json(savedProduct);
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(400).json({ error: 'Failed to create product' });
+  }
+});
 
 
 module.exports = productRouter;
